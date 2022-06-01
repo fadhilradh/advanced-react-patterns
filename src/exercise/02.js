@@ -23,7 +23,7 @@ function Toggle(props) {
 const ToggleOn = ({ on, children }) => on ? children : null
 
 // Accepts `on` and `children` props and returns `children` if `on` is false
-const ToggleOff = ({on, children}) => !on ? children : null
+const ToggleOff = ({on, children}) => on ? null : children
 
 // Accepts `on` and `toggle` props and returns the <Switch /> with those props.
 const ToggleButton = ({ on, toggle }) => <Switch on={on} onClick={toggle} />

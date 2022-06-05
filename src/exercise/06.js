@@ -3,6 +3,7 @@
 
 import * as React from 'react'
 import {Switch} from '../switch'
+import warning from "warning";
 
 const callAll = (...fns) => (...args) => fns.forEach(fn => fn?.(...args))
 
@@ -34,11 +35,16 @@ function useToggle({
   // 🐨 add an `on` option here
   // 💰 you can alias it to `controlledOn` to avoid "variable shadowing."
 } = {}) {
+
+
   const {current: initialState} = React.useRef({on: initialOn})
   const [state, dispatch] = React.useReducer(reducer, initialState)
   // 🐨 determine whether on is controlled and assign that to `onIsControlled`
   // 💰 `controlledOn != null`
   const onIsControlled = controlledOn != null;
+
+  const isReadonly = onIsControlled && onChange === undefined
+  warning(!isReadonly, 'Readonly')
 
   // 🐨 Replace the next line with assigning `on` to `controlledOn` if
   // `onIsControlled`, otherwise, it should be `state.on`.

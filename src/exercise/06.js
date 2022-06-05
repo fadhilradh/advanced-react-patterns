@@ -49,6 +49,22 @@ function useToggle({
     )
   }, [hasOnChange, onIsControlled, readOnly])
 
+  const isControlled = onIsControlled && hasOnChange && !readOnly
+  const isInitiallyControlledRef = React.useRef(isControlled)
+
+  React.useEffect(() => {
+    const isInitiallyControlled = isInitiallyControlledRef.current
+
+    const changedFromControlledToUncontrolled =
+      isInitiallyControlled && !isControlled
+    warning(!changedFromControlledToUncontrolled, 'Changed from controlled to uncontrolled')
+
+    const changedFromUncontrolledToControlled =
+      !isInitiallyControlled && isControlled
+    warning(!changedFromUncontrolledToControlled, 'Changed from uncontrolled to controlled')
+
+  }, [isControlled])
+
   function dispatchWithOnChange(action) {
     if (onIsControlled === false) {
       dispatch(action)
@@ -91,7 +107,7 @@ function Toggle({on: controlledOn, onChange}) {
 }
 
 function App() {
-  const [bothOn, setBothOn] = React.useState(false)
+  const [bothOn, setBothOn] = React.useState()
   const [timesClicked, setTimesClicked] = React.useState(0)
 
   function handleToggleChange(state, action) {
@@ -111,8 +127,10 @@ function App() {
   return (
     <div>
       <div>
-        <Toggle on={bothOn} onChange={handleToggleChange} />
-        <Toggle on={bothOn} onChange={handleToggleChange} />
+        <Toggle on={bothOn} onChange={() => setBothOn(true)} />
+        <Toggle on={bothOn} onChange={() => {
+          setBothOn(undefined)
+        }} />
       </div>
       {timesClicked > 4 ? (
         <div data-testid="notice">

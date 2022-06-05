@@ -41,6 +41,18 @@ function useToggle({
   const onIsControlled = controlledOn != null;
   const on = onIsControlled ? controlledOn : state.on;
 
+  const {current: onWasControlled} = React.useRef(onIsControlled)
+  React.useEffect(() => {
+    warning(
+      !(onIsControlled && !onWasControlled),
+      `\`useToggle\` is changing from uncontrolled to be controlled. Components should not switch from uncontrolled to controlled (or vice versa). Decide between using a controlled or uncontrolled \`useToggle\` for the lifetime of the component. Check the \`on\` prop.`,
+    )
+    warning(
+      !(!onIsControlled && onWasControlled),
+      `\`useToggle\` is changing from controlled to be uncontrolled. Components should not switch from controlled to uncontrolled (or vice versa). Decide between using a controlled or uncontrolled \`useToggle\` for the lifetime of the component. Check the \`on\` prop.`,
+    )
+  }, [onIsControlled, onWasControlled])
+
   const hasOnChange = Boolean(onChange)
   React.useEffect(() => {
     warning(
@@ -48,22 +60,6 @@ function useToggle({
       `An \`on\` prop was provided to useToggle without an \`onChange\` handler. This will render a read-only toggle. If you want it to be mutable, use \`initialOn\`. Otherwise, set either \`onChange\` or \`readOnly\`.`,
     )
   }, [hasOnChange, onIsControlled, readOnly])
-
-  const isControlled = onIsControlled && hasOnChange && !readOnly
-  const isInitiallyControlledRef = React.useRef(isControlled)
-
-  React.useEffect(() => {
-    const isInitiallyControlled = isInitiallyControlledRef.current
-
-    const changedFromControlledToUncontrolled =
-      isInitiallyControlled && !isControlled
-    warning(!changedFromControlledToUncontrolled, 'Changed from controlled to uncontrolled')
-
-    const changedFromUncontrolledToControlled =
-      !isInitiallyControlled && isControlled
-    warning(!changedFromUncontrolledToControlled, 'Changed from uncontrolled to controlled')
-
-  }, [isControlled])
 
   function dispatchWithOnChange(action) {
     if (onIsControlled === false) {

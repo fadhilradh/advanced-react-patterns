@@ -5,6 +5,9 @@ import * as React from 'react'
 import {Switch} from '../switch'
 import warning from "warning";
 
+const __DEV__ = process.env.NODE_ENV === 'development'
+function noop() {}
+
 const callAll = (...fns) => (...args) => fns.forEach(fn => fn?.(...args))
 
 const actionTypes = {
@@ -53,16 +56,20 @@ export function useControlledSwitchWarning(
   const isControlled = controlPropValue != null;
   const { current: wasControlled } = React.useRef(isControlled);
 
-  React.useEffect(() => {
-    warning(
-      !(!wasControlled && isControlled),
-      `\`${componentName}\` is changing from uncontrolled to be controlled. Reach UI components should not switch from uncontrolled to controlled (or vice versa). Decide between using a controlled or uncontrolled \`${componentName}\` for the lifetime of the component. Check the \`${controlPropName}\` prop.`
-    );
-    warning(
-      !(wasControlled && !isControlled),
-      `\`${componentName}\` is changing from controlled to be uncontrolled. Reach UI components should not switch from controlled to uncontrolled (or vice versa). Decide between using a controlled or uncontrolled \`${componentName}\` for the lifetime of the component. Check the \`${controlPropName}\` prop.`
-    );
-  }, [isControlled, wasControlled, componentName, controlPropName])
+  let effect = noop
+  if (__DEV__) {
+    effect = () => {
+      warning(
+        !(!wasControlled && isControlled),
+        `\`${componentName}\` is changing from uncontrolled to be controlled. Reach UI components should not switch from uncontrolled to controlled (or vice versa). Decide between using a controlled or uncontrolled \`${componentName}\` for the lifetime of the component. Check the \`${controlPropName}\` prop.`
+      );
+      warning(
+        !(wasControlled && !isControlled),
+        `\`${componentName}\` is changing from controlled to be uncontrolled. Reach UI components should not switch from controlled to uncontrolled (or vice versa). Decide between using a controlled or uncontrolled \`${componentName}\` for the lifetime of the component. Check the \`${controlPropName}\` prop.`
+      );
+    }
+  }
+  React.useEffect(effect, [isControlled, wasControlled, componentName, controlPropName])
 }
 
 function useOnChangeReadOnlyWarning(
@@ -76,12 +83,18 @@ function useOnChangeReadOnlyWarning(
   onChangeProp,
 ) {
   const isControlled = controlPropValue != null
-  React.useEffect(() => {
-    warning(
-      !(!hasOnChange && isControlled && !readOnly),
-      `A \`${controlPropName}\` prop was provided to \`${componentName}\` without an \`${onChangeProp}\` handler. This will result in a read-only \`${controlPropName}\` value. If you want it to be mutable, use \`${initialValueProp}\`. Otherwise, set either \`${onChangeProp}\` or \`${readOnlyProp}\`.`,
-    )
-  }, [
+
+  let effect = noop
+  if (__DEV__) {
+    effect = () => {
+      warning(
+        !(!hasOnChange && isControlled && !readOnly),
+        `A \`${controlPropName}\` prop was provided to \`${componentName}\` without an \`${onChangeProp}\` handler. This will result in a read-only \`${controlPropName}\` value. If you want it to be mutable, use \`${initialValueProp}\`. Otherwise, set either \`${onChangeProp}\` or \`${readOnlyProp}\`.`,
+      )
+    }
+  }
+
+  React.useEffect(effect, [
     componentName,
     controlPropName,
     isControlled,
@@ -181,10 +194,8 @@ function App() {
   return (
     <div>
       <div>
-        <Toggle on={bothOn} onChange={() => setBothOn(true)} />
-        <Toggle on={bothOn} onChange={() => {
-          setBothOn(undefined)
-        }} />
+        <Toggle on={bothOn} onChange={handleToggleChange} />
+        <Toggle on={bothOn} onChange={handleToggleChange} />
       </div>
       {timesClicked > 4 ? (
         <div data-testid="notice">
